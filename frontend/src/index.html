@@ -128,7 +128,62 @@
   color: #2e7d32;
   font-weight: bold;
 }
+/* Active (Currently Reading) Section */
+.section-tracker li.active {
+  background: #e8f5e9;
+  border-left: 4px solid #2e7d32;
+  padding-left: 10px;
+  color: #1b5e20;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
 
+/* Smooth animated checkmark */
+.section-tracker li.completed {
+  position: relative;
+}
+
+.section-tracker li.completed::before {
+  content: "✔";
+  margin-right: 6px;
+  color: #2e7d32;
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.section-tracker {
+  position: sticky;
+  top: 90px;
+  right: 160px;
+}
+.page-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-tracker {
+  position: sticky;
+  top: 90px; /* below navbar */
+  width: 280px;
+
+  background: #f1f8e9;
+  border-radius: 12px;
+  border: 1px solid #c5e1a5;
+  padding: 15px 20px;
+
+  font-size: 14px;
+}
+
+main {
+  flex: 1;
+}
 
 
     </style>
@@ -201,7 +256,7 @@
         <p>Your hub for environmental and animal welfare awareness.</p>
     </div>
 </section>
-
+<div class="page-layout">
     <!-- Section Completion Tracker -->
 <div class="section-tracker">
   <h4>📘 Your Progress</h4>
@@ -310,7 +365,7 @@
                     <p>Participate in feeding drives organized by NGOs.</p>
                 </div>
             </div>
-        </section>
+        </section></div>
 
         <!-- Kids Quiz Section -->
         <section id="quiz" class="kids-quiz-section">
@@ -484,7 +539,7 @@ const sections = [
   { id: "feeding", tracker: "track-feeding" }
 ];
 
-// Restore progress
+// Restore completed sections
 sections.forEach(sec => {
   if (localStorage.getItem(sec.id) === "done") {
     markCompleted(sec.tracker);
@@ -493,24 +548,45 @@ sections.forEach(sec => {
 
 function markCompleted(trackerId) {
   const item = document.getElementById(trackerId);
-  item.textContent = "✓ " + item.textContent.replace("⏳ ", "");
-  item.classList.add("completed");
+  if (!item.classList.contains("completed")) {
+    item.classList.add("completed");
+    item.textContent = item.textContent.replace("⏳ ", "");
+  }
 }
 
 window.addEventListener("scroll", () => {
+  let currentSectionId = null;
+
   sections.forEach(sec => {
     const sectionEl = document.getElementById(sec.id);
     const rect = sectionEl.getBoundingClientRect();
 
-    if (rect.top < window.innerHeight / 2) {
+    // ACTIVE SECTION (middle of viewport)
+    if (
+      rect.top <= window.innerHeight / 2 &&
+      rect.bottom >= window.innerHeight / 2
+    ) {
+      currentSectionId = sec.id;
+    }
+
+    // COMPLETED (section fully passed)
+    if (rect.bottom < window.innerHeight * 0.9) {
       if (localStorage.getItem(sec.id) !== "done") {
         localStorage.setItem(sec.id, "done");
         markCompleted(sec.tracker);
       }
     }
   });
+
+  // Highlight active tracker
+  sections.forEach(sec => {
+    const trackerItem = document.getElementById(sec.tracker);
+    trackerItem.classList.toggle("active", sec.id === currentSectionId);
+  });
 });
 </script>
+
+
 
 </body>
 
